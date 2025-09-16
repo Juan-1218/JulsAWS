@@ -85,7 +85,7 @@ function App() {
   return (
     <div className="container">
       <header>
-        <h1>Nikolas</h1>
+        <h1>Juls Tracker</h1>
         <p className="subtitle">Monitoreo en tiempo real</p>
       </header>
 
