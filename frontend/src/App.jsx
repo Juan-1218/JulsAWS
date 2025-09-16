@@ -86,7 +86,7 @@ function App() {
     <div className="container">
       <header>
         <h1>Juls Tracker</h1>
-        <p className="subtitle">Monitoreo en tiempo real</p>
+        <p className="subtitle">Just UDP Location Service</p>
       </header>
 
       {error ? (
