@@ -1,0 +1,44 @@
+name: Deploy Frontend to EC2
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Deploy to EC2
+      env:
+        HOST: ${{ secrets.EC2_HOST }}
+        USER: ${{ secrets.EC2_USER }}
+        KEY: ${{ secrets.EC2_SSH_KEY }}
+      run: |
+        # Crear archivo de llave SSH
+        echo "$KEY" > deploy_key
+        chmod 600 deploy_key
+        
+        # Conectar por SSH y ejecutar actualización
+        ssh -o StrictHostKeyChecking=no -i deploy_key ${USER}@${HOST} '
+          cd /opt/location-tracker
+          
+          # Pull últimos cambios
+          git pull origin main
+          
+          # Actualizar frontend
+          cd frontend
+          npm install
+          npm run build
+          
+          # Verificar que Nginx esté funcionando
+          sudo nginx -t && sudo systemctl reload nginx
+          
+          echo "✅ Despliegue completado"
+        '
