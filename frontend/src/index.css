@@ -1,0 +1,269 @@
+/* Glassmorphism effects */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glassmorphism-strong {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Rounded corners */
+.rounded-4xl {
+  border-radius: 2rem;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Loading spinner styles */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Pulse animation */
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Utility classes for consistent styling */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+/* Dark mode base */
+.dark {
+  color-scheme: dark;
+}
+
+/* Font family for monospace elements */
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', 'Oxygen Mono', 'Ubuntu Monospace', 'Source Code Pro', 'Fira Code', 'Droid Sans Mono', 'Courier New', monospace;
+}
+
+/* Ensure proper spacing and sizing */
+.size-6 {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Container styles */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Responsive breakpoints */
+@media (min-width: 768px) {
+  .md\:min-w-\[90\%\] {
+    min-width: 90%;
+  }
+  
+  .md\:-mt-60 {
+    margin-top: -15rem;
+  }
+  
+  .md\:mt-12 {
+    margin-top: 3rem;
+  }
+  
+  .md\:flex-row {
+    flex-direction: row;
+  }
+  
+  .md\:w-96 {
+    width: 24rem;
+  }
+  
+  .md\:h-96 {
+    height: 24rem;
+  }
+  
+  .md\:w-80 {
+    width: 20rem;
+  }
+  
+  .md\:h-80 {
+    height: 20rem;
+  }
+  
+  .md\:w-64 {
+    width: 16rem;
+  }
+  
+  .md\:h-64 {
+    height: 16rem;
+  }
+}
+
+/* Additional utility classes that might be needed */
+.min-w-\[80\%\] {
+  min-width: 80%;
+}
+
+.min-w-\[90\%\] {
+  min-width: 90%;
+}
+
+.max-w-\[100\%\] {
+  max-width: 100%;
+}
+
+.max-w-\[90\%\] {
+  max-width: 90%;
+}
+
+.-translate-x-1\/2 {
+  transform: translateX(-50%);
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.text-l {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* Colors */
+.text-white {
+  color: rgb(255 255 255);
+}
+
+.text-white\/80 {
+  color: rgb(255 255 255 / 0.8);
+}
+
+.text-white\/70 {
+  color: rgb(255 255 255 / 0.7);
+}
+
+.text-white\/60 {
+  color: rgb(255 255 255 / 0.6);
+}
+
+.text-white\/50 {
+  color: rgb(255 255 255 / 0.5);
+}
+
+.text-green-400 {
+  color: rgb(74 222 128);
+}
+
+.text-red-400 {
+  color: rgb(248 113 113);
+}
+
+.text-yellow-400 {
+  color: rgb(250 204 21);
+}
+
+.text-violet-500 {
+  color: rgb(139 92 246);
+}
+
+.text-violet-300 {
+  color: rgb(196 181 253);
+}
+
+.bg-green-400 {
+  background-color: rgb(74 222 128);
+}
+
+.bg-red-400 {
+  background-color: rgb(248 113 113);
+}
+
+.bg-violet-600 {
+  background-color: rgb(124 58 237);
+}
+
+.bg-violet-700 {
+  background-color: rgb(109 40 217);
+}
+
+/* Hover effects */
+.hover\:bg-violet-700:hover {
+  background-color: rgb(109 40 217);
+}
+
+.hover\:text-violet-300:hover {
+  color: rgb(196 181 253);
+}
+
+.hover\:text-violet-500:hover {
+  color: rgb(139 92 246);
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+.hover\:shadow-\[0px_3px_15px_0px_rgba\(142\,81\,255\,0\.6\)\]:hover {
+  box-shadow: 0px 3px 15px 0px rgba(142, 81, 255, 0.6);
+}
+
+/* Group hover effects */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+.group:hover .group-hover\:text-violet-500 {
+  color: rgb(139 92 246);
+}
+
+.group:hover .group-hover\:text-violet-300 {
+  color: rgb(196 181 253);
+}
+
+/* Duration classes */
+.duration-300 {
+  transition-duration: 300ms;
+}
+
+.duration-500 {
+  transition-duration: 500ms;
+}
