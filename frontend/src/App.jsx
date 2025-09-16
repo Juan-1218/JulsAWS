@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useState, useEffect, useRef } from 'react'
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
@@ -18,11 +18,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
-  
-  // Estados para optimización del mapa
-  const [mapInstance, setMapInstance] = useState(null);
-  const [currentMarker, setCurrentMarker] = useState(null);
-  const [isMapInitialized, setIsMapInitialized] = useState(false);
 
   const fetchLatestLocation = async () => {
     try {
@@ -177,94 +172,100 @@ function App() {
     </div>
   );
 
-  // --- Componente del Mapa OPTIMIZADO ---
-  const LocationMap = ({ location }) => {
-    const JAWG_ACCESS_TOKEN = 'icNC49f9tQCM0CwkpIHYIXmvNjTgtAVrdIf3PdM94merPcn8Bcx806NlkILQrOPS';
-    const JAWG_MAP_ID = 'jawg-dark';
-
+  // --- Componente interno para controlar el marker ---
+  const MarkerController = ({ location }) => {
+    const map = useMap();
+    const markerRef = useRef(null);
+    
     const customIcon = new Icon({
       iconUrl: "/icon.svg",
       iconSize: [70, 70]
     });
 
-    // Posición inicial del mapa (solo se usa una vez)
-    const initialPosition = [parseFloat(location.latitude), parseFloat(location.longitude)];
-
-    // Efecto para manejar actualizaciones de posición sin re-renderizar el mapa
     useEffect(() => {
-      if (mapInstance && currentMarker && location && isMapInitialized) {
+      if (location && map) {
         const newPosition = [parseFloat(location.latitude), parseFloat(location.longitude)];
         
-        console.log('🗺️ Actualizando posición del marker:', newPosition);
-        
-        // Actualizar la posición del marker con animación suave
-        currentMarker.setLatLng(newPosition);
-        
-        // Actualizar el popup con la nueva información
-        currentMarker.setPopupContent(`
-          <div class="text-center">
-            <strong>Ubicación actual</strong><br/>
-            <small>Recibida: ${formatTimestamp(location.timestamp_value)}</small><br/>
-            <small>Lat: ${parseFloat(location.latitude).toFixed(6)}</small><br/>
-            <small>Lng: ${parseFloat(location.longitude).toFixed(6)}</small>
-          </div>
-        `);
-        
-        // Opcional: mover la vista del mapa solo si el marker está muy lejos del centro
-        const currentCenter = mapInstance.getCenter();
-        const distance = mapInstance.distance(currentCenter, newPosition);
-        
-        // Solo mover el mapa si la distancia es mayor a 200 metros para evitar movimientos constantes
-        if (distance > 200) {
-          console.log('🗺️ Ajustando vista del mapa, distancia:', distance);
-          mapInstance.flyTo(newPosition, mapInstance.getZoom(), {
-            duration: 1.5,
-            easeLinearity: 0.25
-          });
+        // Si no existe el marker, crearlo
+        if (!markerRef.current) {
+          const L = require('leaflet');
+          markerRef.current = L.marker(newPosition, { icon: customIcon })
+            .addTo(map)
+            .bindPopup(`
+              <div class="text-center">
+                <strong>Ubicación actual</strong><br/>
+                <small>Recibida: ${formatTimestamp(location.timestamp_value)}</small><br/>
+                <small>Lat: ${parseFloat(location.latitude).toFixed(6)}</small><br/>
+                <small>Lng: ${parseFloat(location.longitude).toFixed(6)}</small>
+              </div>
+            `);
+          
+          console.log('📍 Marker creado con useMap');
+          
+          // Centrar el mapa en la primera ubicación
+          map.setView(newPosition, 18);
+        } else {
+          // Actualizar posición del marker existente
+          console.log('🗺️ Actualizando marker:', newPosition);
+          markerRef.current.setLatLng(newPosition);
+          
+          // Actualizar popup
+          markerRef.current.setPopupContent(`
+            <div class="text-center">
+              <strong>Ubicación actual</strong><br/>
+              <small>Recibida: ${formatTimestamp(location.timestamp_value)}</small><br/>
+              <small>Lat: ${parseFloat(location.latitude).toFixed(6)}</small><br/>
+              <small>Lng: ${parseFloat(location.longitude).toFixed(6)}</small>
+            </div>
+          `);
+          
+          // Solo mover la vista si está muy lejos
+          const currentCenter = map.getCenter();
+          const distance = map.distance(currentCenter, newPosition);
+          
+          if (distance > 200) {
+            console.log('🗺️ Ajustando vista, distancia:', distance);
+            map.flyTo(newPosition, map.getZoom(), {
+              duration: 1.5,
+              easeLinearity: 0.25
+            });
+          }
         }
       }
-    }, [location, mapInstance, currentMarker, isMapInitialized]);
+    }, [location, map]);
 
-    // Handler para cuando el mapa se inicializa
-    const handleMapCreated = (map) => {
-      console.log('🗺️ Mapa inicializado');
-      setMapInstance(map);
-      setIsMapInitialized(true);
-    };
+    // Cleanup cuando se desmonta
+    useEffect(() => {
+      return () => {
+        if (markerRef.current && map) {
+          map.removeLayer(markerRef.current);
+        }
+      };
+    }, [map]);
 
-    // Handler para cuando el marker se crea
-    const handleMarkerCreated = (marker) => {
-      if (marker && !currentMarker) {
-        console.log('📍 Marker creado');
-        setCurrentMarker(marker);
-      }
-    };
+    return null; // No renderiza nada, solo controla el marker
+  };
+
+  // --- Componente del Mapa OPTIMIZADO con useMap ---
+  const LocationMap = ({ location }) => {
+    const JAWG_ACCESS_TOKEN = 'icNC49f9tQCM0CwkpIHYIXmvNjTgtAVrdIf3PdM94merPcn8Bcx806NlkILQrOPS';
+    const JAWG_MAP_ID = 'jawg-dark';
+
+    // Posición inicial estática (no cambia)
+    const [initialCenter] = useState([parseFloat(location.latitude), parseFloat(location.longitude)]);
 
     return (
       <div className='glassmorphism-strong rounded-4xl backdrop-blur-lg shadow-lg p-4 max-w-4xl w-full mx-4'>
         <MapContainer 
-          center={initialPosition} 
+          center={initialCenter} 
           zoom={18}
           style={{ height: '35rem', width: '100%', borderRadius: '1rem' }}
-          whenCreated={handleMapCreated}
         >
           <TileLayer
             url={`https://{s}.tile.jawg.io/${JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${JAWG_ACCESS_TOKEN}`}
           />
-          <Marker 
-            position={initialPosition} 
-            icon={customIcon}
-            ref={handleMarkerCreated}
-          >
-            <Popup>
-              <div className="text-center">
-                <strong>Ubicación actual</strong><br/>
-                <small>Recibida: {formatTimestamp(location.timestamp_value)}</small><br/>
-                <small>Lat: {parseFloat(location.latitude).toFixed(6)}</small><br/>
-                <small>Lng: {parseFloat(location.longitude).toFixed(6)}</small>
-              </div>
-            </Popup>
-          </Marker>
+          {/* Componente que controla el marker sin re-renderizar el mapa */}
+          <MarkerController location={location} />
         </MapContainer>
       </div>
     );
