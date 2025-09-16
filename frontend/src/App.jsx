@@ -1,7 +1,7 @@
-// src/App.jsx - Versión actualizada con SSE
-import React, { useState, useEffect, useCallback } from 'react';
+// src/App.jsx - Versión actualizada con SSE y mapa optimizado
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSSE } from './hooks/useSSE';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
@@ -166,7 +166,7 @@ const ConnectionStatus = ({ connectionStatus, isConnected }) => {
 
 const LocationInfo = ({ location }) => (
   <div className='glassmorphism-strong rounded-4xl max-w-[100%] p-8'>
-    <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8'>Última Ubicación Recibida</h2>
+    <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8'>📍 Última Ubicación Recibida</h2>
     <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(142,81,255,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
       <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-105'>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-violet-500 size-6">
@@ -204,17 +204,27 @@ const LocationInfo = ({ location }) => (
       </div>
       <span className='text-white/50 text-sm'>{location.formattedDate}</span>
     </div>
+
+    <div className="mt-6">
+      <a 
+        href={`https://www.google.com/maps?q=${location.latitude},${location.longitude}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(142,81,255,0.6)] rounded-xl px-4 py-3 flex items-center justify-center gap-2 transition-all duration-300"
+      >
+        <span className="text-white group-hover:text-violet-300">Ver en Google Maps</span>
+        <span className="text-xl">🗺️</span>
+      </a>
+    </div>
   </div>
 );
 
-// --- Componente del Mapa (Sin cambios) ---
-function ChangeMapView({ coords }) {
-  const map = useMap();
-  map.setView(coords, map.getZoom());
-  return null;
-}
-
+// --- Componente del Mapa OPTIMIZADO ---
 const LocationMap = ({ location }) => {
+  const [mapInstance, setMapInstance] = useState(null);
+  const [currentMarker, setCurrentMarker] = useState(null);
+  const [isMapInitialized, setIsMapInitialized] = useState(false);
+  
   const JAWG_ACCESS_TOKEN = 'icNC49f9tQCM0CwkpIHYIXmvNjTgtAVrdIf3PdM94merPcn8Bcx806NlkILQrOPS';
   const JAWG_MAP_ID = 'jawg-dark';
 
@@ -223,25 +233,84 @@ const LocationMap = ({ location }) => {
     iconSize: [70, 70]
   });
 
-  const position = [location.latitude, location.longitude];
+  // Posición inicial del mapa (solo se usa una vez)
+  const initialPosition = [location.latitude, location.longitude];
+
+  // Efecto para manejar actualizaciones de posición sin re-renderizar el mapa
+  useEffect(() => {
+    if (mapInstance && currentMarker && location && isMapInitialized) {
+      const newPosition = [location.latitude, location.longitude];
+      
+      console.log('🗺️ Actualizando posición del marker:', newPosition);
+      
+      // Actualizar la posición del marker con animación suave
+      currentMarker.setLatLng(newPosition);
+      
+      // Actualizar el popup con la nueva información
+      currentMarker.setPopupContent(`
+        <div class="text-center">
+          <strong>Ubicación actual</strong><br/>
+          <small>Recibida: ${location.formattedDate}</small><br/>
+          <small>Lat: ${location.latitude.toFixed(6)}</small><br/>
+          <small>Lng: ${location.longitude.toFixed(6)}</small>
+        </div>
+      `);
+      
+      // Opcional: mover la vista del mapa solo si el marker está muy lejos del centro
+      const currentCenter = mapInstance.getCenter();
+      const distance = mapInstance.distance(currentCenter, newPosition);
+      
+      // Solo mover el mapa si la distancia es mayor a 200 metros para evitar movimientos constantes
+      if (distance > 200) {
+        console.log('🗺️ Ajustando vista del mapa, distancia:', distance);
+        mapInstance.flyTo(newPosition, mapInstance.getZoom(), {
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
+      }
+    }
+  }, [location, mapInstance, currentMarker, isMapInitialized]);
+
+  // Handler para cuando el mapa se inicializa
+  const handleMapCreated = (map) => {
+    console.log('🗺️ Mapa inicializado');
+    setMapInstance(map);
+    setIsMapInitialized(true);
+  };
+
+  // Handler para cuando el marker se crea
+  const handleMarkerCreated = (marker) => {
+    if (marker && !currentMarker) {
+      console.log('📍 Marker creado');
+      setCurrentMarker(marker);
+    }
+  };
 
   return (
     <div className='glassmorphism-strong rounded-4xl backdrop-blur-lg shadow-lg p-4 max-w-4xl w-full mx-4'>
       <MapContainer 
-        center={position} 
+        center={initialPosition} 
         zoom={18}
         style={{ height: '35rem', width: '100%', borderRadius: '1rem' }}
+        whenCreated={handleMapCreated}
       >
         <TileLayer
           url={`https://{s}.tile.jawg.io/${JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${JAWG_ACCESS_TOKEN}`}
         />
         <Marker 
-          position={position} 
+          position={initialPosition} 
           icon={customIcon}
+          ref={handleMarkerCreated}
         >
-          <Popup>{`Location received: ${location.formattedDate}`}</Popup>
+          <Popup>
+            <div className="text-center">
+              <strong>Ubicación actual</strong><br/>
+              <small>Recibida: {location.formattedDate}</small><br/>
+              <small>Lat: {location.latitude.toFixed(6)}</small><br/>
+              <small>Lng: {location.longitude.toFixed(6)}</small>
+            </div>
+          </Popup>
         </Marker>
-        <ChangeMapView coords={position} />
       </MapContainer>
     </div>
   );
@@ -282,7 +351,8 @@ function App() {
         ) : latestLocation ? (
           <>
             <LocationInfo location={latestLocation} />
-            <LocationMap location={latestLocation} />
+            {/* Solo renderizar el mapa una vez que tengamos datos */}
+            <LocationMap location={latestLocation} key="optimized-map" />
           </>
         ) : (
           <div className="glassmorphism-strong min-w-[90%] mx-auto rounded-4xl p-8 text-center">
