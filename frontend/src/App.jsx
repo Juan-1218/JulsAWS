@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useState, useEffect, useRef } from 'react'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
@@ -18,6 +18,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [mapInitialized, setMapInitialized] = useState(false);
+  
+  // Ref para el marker para actualizarlo sin re-renderizar el mapa
+  const markerRef = useRef(null);
 
   const fetchLatestLocation = async () => {
     try {
@@ -172,34 +176,10 @@ function App() {
     </div>
   );
 
-  // --- Componente del Mapa ---
-  function ChangeMapView({ coords }) {
-    const map = useMap();
-    
-    useEffect(() => {
-      if (coords && coords.length === 2) {
-        // Obtener el centro actual del mapa
-        const currentCenter = map.getCenter();
-        const newPosition = { lat: coords[0], lng: coords[1] };
-        
-        // Calcular la distancia entre la posición actual y la nueva
-        const distance = map.distance(currentCenter, newPosition);
-        
-        // Solo mover el mapa si la distancia es mayor a 100 metros
-        if (distance > 100) {
-          map.flyTo(coords, map.getZoom(), {
-            duration: 1.5,
-            easeLinearity: 0.25
-          });
-        }
-      }
-    }, [coords, map]);
-
-    return null;
-  }
-
+  // --- Componente del Mapa Optimizado ---
   const LocationMap = ({ location }) => {
-    const [initialCenter, setInitialCenter] = useState(null);
+    const [mapInstance, setMapInstance] = useState(null);
+    const [currentMarker, setCurrentMarker] = useState(null);
     const JAWG_ACCESS_TOKEN = 'icNC49f9tQCM0CwkpIHYIXmvNjTgtAVrdIf3PdM94merPcn8Bcx806NlkILQrOPS';
     const JAWG_MAP_ID = 'jawg-dark';
 
@@ -208,37 +188,61 @@ function App() {
       iconSize: [70, 70]
     });
 
-    const position = [parseFloat(location.latitude), parseFloat(location.longitude)];
+    // Posición inicial del mapa (solo se usa una vez)
+    const initialPosition = [parseFloat(location.latitude), parseFloat(location.longitude)];
 
-    // Establecer el centro inicial solo una vez
+    // Efecto para manejar actualizaciones de posición sin re-renderizar el mapa
     useEffect(() => {
-      if (!initialCenter && location) {
-        setInitialCenter(position);
+      if (mapInstance && currentMarker && location) {
+        const newPosition = [parseFloat(location.latitude), parseFloat(location.longitude)];
+        
+        // Actualizar la posición del marker con animación suave
+        currentMarker.setLatLng(newPosition);
+        
+        // Opcional: mover la vista del mapa solo si el marker está muy lejos del centro
+        const currentCenter = mapInstance.getCenter();
+        const distance = mapInstance.distance(currentCenter, newPosition);
+        
+        // Solo mover el mapa si la distancia es mayor a 200 metros para evitar movimientos constantes
+        if (distance > 200) {
+          mapInstance.flyTo(newPosition, mapInstance.getZoom(), {
+            duration: 1.5,
+            easeLinearity: 0.25
+          });
+        }
       }
-    }, [location, initialCenter, position]);
+    }, [location, mapInstance, currentMarker]);
 
-    // Si no tenemos centro inicial, mostrar loading
-    if (!initialCenter) {
-      return (
-        <div className='glassmorphism-strong rounded-4xl backdrop-blur-lg shadow-lg p-4 max-w-4xl w-full mx-4 flex items-center justify-center' style={{ height: '35rem' }}>
-          <div className="text-white/70">Cargando mapa...</div>
-        </div>
-      );
-    }
+    // Handler para cuando el mapa se inicializa
+    const handleMapCreated = (map) => {
+      setMapInstance(map);
+      setMapInitialized(true);
+    };
+
+    // Handler para cuando el marker se crea
+    const handleMarkerCreated = (marker) => {
+      setCurrentMarker(marker);
+    };
 
     return (
       <div className='glassmorphism-strong rounded-4xl backdrop-blur-lg shadow-lg p-4 max-w-4xl w-full mx-4'>
         <MapContainer 
-          center={initialCenter} 
+          center={initialPosition} 
           zoom={18}
           style={{ height: '35rem', width: '100%', borderRadius: '1rem' }}
+          whenCreated={handleMapCreated}
         >
           <TileLayer
             url={`https://{s}.tile.jawg.io/${JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${JAWG_ACCESS_TOKEN}`}
           />
           <Marker 
-            position={position} 
+            position={initialPosition} 
             icon={customIcon}
+            ref={(ref) => {
+              if (ref && !currentMarker) {
+                handleMarkerCreated(ref);
+              }
+            }}
           >
             <Popup>
               <div className="text-center">
@@ -249,7 +253,6 @@ function App() {
               </div>
             </Popup>
           </Marker>
-          <ChangeMapView coords={position} />
         </MapContainer>
       </div>
     );
@@ -296,7 +299,8 @@ function App() {
         ) : locationData ? (
           <>
             <LocationInfo location={locationData} />
-            <LocationMap location={locationData} />
+            {/* Solo renderizar el mapa una vez que tengamos datos */}
+            <LocationMap location={locationData} key="map-container" />
           </>
         ) : (
           <div className="glassmorphism-strong min-w-[90%] mx-auto rounded-4xl p-8 text-center">
