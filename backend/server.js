@@ -11,7 +11,9 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  ssl: true
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 // Crear tabla si no existe
@@ -62,13 +64,13 @@ udpServer.on('message', async (msg, rinfo) => {
     `;
     
     const values = [
-      data.latitude,
-      data.longitude,
-      data.timestamp_value,
-      data.accuracy || null,
-      data.altitude || null,
-      data.speed || null,
-      data.provider || null
+      data.lat,
+      data.lon,
+      data.time,
+      data.acc || null,
+      data.alt || null,
+      data.spd || null,
+      data.prov || null
     ];
     
     const result = await pool.query(query, values);
