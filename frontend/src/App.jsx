@@ -3,7 +3,6 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
-import './App.css'
 
 // --- Configuración Básica ---
 const config = {
