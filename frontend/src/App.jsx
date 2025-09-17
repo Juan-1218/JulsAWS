@@ -59,8 +59,7 @@ const LocationInfo = ({ location, formatCoordinate, formatTimestamp }) => (
         <h3 className='text-l text-white rounded-xl inline-block'>Latitude:</h3>
       </div>
       <div className="flex flex-col items-end">
-        <span className='text-white/80 font-mono'>{parseFloat(location.latitude).toFixed(8)}°</span>
-        <span className='text-white/50 text-sm'>{formatCoordinate(location.latitude, 'latitude')}</span>
+        <span className='text-white/80 font-mono'>{parseFloat(location.latitude).toFixed(8)}</span>
       </div>
     </div>
 
@@ -72,8 +71,7 @@ const LocationInfo = ({ location, formatCoordinate, formatTimestamp }) => (
         <h3 className='text-l text-white rounded-xl inline-block'>Longitude:</h3>
       </div>
       <div className="flex flex-col items-end">
-        <span className='text-white/80 font-mono'>{parseFloat(location.longitude).toFixed(8)}°</span>
-        <span className='text-white/50 text-sm'>{formatCoordinate(location.longitude, 'longitude')}</span>
+        <span className='text-white/80 font-mono'>{parseFloat(location.longitude).toFixed(8)}</span>
       </div>
     </div>
 
