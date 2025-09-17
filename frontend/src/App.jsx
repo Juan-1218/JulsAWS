@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L, { Icon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
@@ -47,7 +47,7 @@ const ErrorMessage = ({ error, onRetry }) => (
   </div>
 );
 
-const LocationInfo = ({ location, formatCoordinate, formatTimestamp }) => (
+const LocationInfo = ({ location, formatTimestamp }) => (
   <div className='glassmorphism-strong rounded-4xl max-w-[100%] p-8'>
     <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8'>Last Location Received</h2>
     
@@ -103,13 +103,16 @@ const MapUpdater = ({ position }) => {
 };
 
 // --- Componente del Mapa ---
-const LocationMap = ({ location, formatTimestamp }) => {
+const LocationMap = ({ location, formatTimestamp, path }) => {
   const position = [parseFloat(location.latitude), parseFloat(location.longitude)];
   
   const customIcon = new Icon({
     iconUrl: "/icon.svg",
     iconSize: [70, 70]
   });
+
+  // Estilo para la línea de la trayectoria
+  const polylineOptions = { color: '#8B5CF6', weight: 4 };
 
   return (
     <div className='glassmorphism-strong rounded-4xl backdrop-blur-lg shadow-lg p-4 max-w-4xl w-full mx-4'>
@@ -131,6 +134,10 @@ const LocationMap = ({ location, formatTimestamp }) => {
             </div>
           </Popup>
         </Marker>
+        
+        {/* Componente que dibuja la trayectoria */}
+        <Polyline pathOptions={polylineOptions} positions={path} />
+
         <MapUpdater position={position} />
       </MapContainer>
     </div>
@@ -143,6 +150,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+  // --- NUEVO ESTADO PARA GUARDAR LA TRAYECTORIA ---
+  const [path, setPath] = useState([]);
 
   const fetchLatestLocation = async () => {
     try {
@@ -158,6 +167,18 @@ function App() {
       } else {
         const data = await response.json();
         setLocationData(data);
+        
+        // --- LÓGICA PARA ACTUALIZAR LA TRAYECTORIA ---
+        const newPosition = [parseFloat(data.latitude), parseFloat(data.longitude)];
+        // Evita añadir puntos duplicados si la ubicación no ha cambiado
+        setPath(prevPath => {
+          const lastPoint = prevPath[prevPath.length - 1];
+          if (!lastPoint || lastPoint[0] !== newPosition[0] || lastPoint[1] !== newPosition[1]) {
+            return [...prevPath, newPosition];
+          }
+          return prevPath;
+        });
+
         setError(null);
         setLastUpdate(new Date());
       }
@@ -220,7 +241,7 @@ function App() {
         ) : locationData ? (
           <>
             <LocationInfo location={locationData} formatCoordinate={formatCoordinate} formatTimestamp={formatTimestamp} />
-            <LocationMap location={locationData} formatTimestamp={formatTimestamp} />
+            <LocationMap location={locationData} formatTimestamp={formatTimestamp} path={path} />
           </>
         ) : (
           <div className="glassmorphism-strong min-w-[90%] mx-auto rounded-4xl p-8 text-center">
