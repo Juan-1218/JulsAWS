@@ -84,18 +84,10 @@ const LocationInfo = ({ location, formatCoordinate, formatTimestamp }) => (
         </svg>
         <h3 className='text-l text-white rounded-xl inline-block'>Timestamp:</h3>
       </div>
-    </div>
-
-    <div className="mt-6">
-      <a 
-        href={`https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(142,81,255,0.6)] rounded-xl px-4 py-3 flex items-center justify-center gap-2 transition-all duration-300"
-      >
-        <span className="text-white group-hover:text-violet-300">Ver en Google Maps</span>
-        <span className="text-xl">🗺️</span>
-      </a>
+      <div className="flex flex-col items-end">
+        <span className='text-white/80 font-mono'>{location.timestamp_value}</span>
+        <span className='text-white/50 text-sm'>{formatTimestamp(location.timestamp_value)}</span>
+      </div>
     </div>
   </div>
 );
