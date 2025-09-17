@@ -47,25 +47,16 @@ const ErrorMessage = ({ error, onRetry }) => (
   </div>
 );
 
-const ConnectionStatus = ({ isConnected }) => (
-  <div className="flex items-center gap-2 text-sm">
-    <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
-    <span className={isConnected ? 'text-green-400' : 'text-red-400'}>
-      {isConnected ? 'Conectado via Polling' : 'Desconectado'}
-    </span>
-  </div>
-);
-
 const LocationInfo = ({ location, formatCoordinate, formatTimestamp }) => (
   <div className='glassmorphism-strong rounded-4xl max-w-[100%] p-8'>
-    <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8'>📍 Última Ubicación Recibida</h2>
+    <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8'>Last Location Received</h2>
     
     <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(142,81,255,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
       <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-105'>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-violet-500 size-6">
           <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H8.25a.75.75 0 0 0 0 1.5h5.69l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3Z" clipRule="evenodd" />
         </svg>
-        <h3 className='text-l text-white rounded-xl inline-block'>Latitud:</h3>
+        <h3 className='text-l text-white rounded-xl inline-block'>Latitude:</h3>
       </div>
       <div className="flex flex-col items-end">
         <span className='text-white/80 font-mono'>{parseFloat(location.latitude).toFixed(8)}°</span>
@@ -78,7 +69,7 @@ const LocationInfo = ({ location, formatCoordinate, formatTimestamp }) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-violet-500 size-6">
           <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72v5.69a.75.75 0 0 0 1.5 0v-5.69l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z" clipRule="evenodd" />
         </svg>
-        <h3 className='text-l text-white rounded-xl inline-block'>Longitud:</h3>
+        <h3 className='text-l text-white rounded-xl inline-block'>Longitude:</h3>
       </div>
       <div className="flex flex-col items-end">
         <span className='text-white/80 font-mono'>{parseFloat(location.longitude).toFixed(8)}°</span>
@@ -92,10 +83,6 @@ const LocationInfo = ({ location, formatCoordinate, formatTimestamp }) => (
           <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
         </svg>
         <h3 className='text-l text-white rounded-xl inline-block'>Timestamp:</h3>
-      </div>
-      <div className="flex flex-col items-end">
-        <span className='text-white/80 font-mono'>{location.timestamp_value}</span>
-        <span className='text-white/50 text-sm'>{formatTimestamp(location.timestamp_value)}</span>
       </div>
     </div>
 
@@ -232,16 +219,6 @@ function App() {
             {config.APP_NAME}
           </h1>
           <p className="text-white/60 text-sm">{config.APP_SUBTITLE}</p>
-          <div className="flex items-center gap-4 text-sm">
-            <ConnectionStatus isConnected={!error && !loading} />
-            <span className="text-white/60">v{config.APP_VERSION} - Polling</span>
-            {lastUpdate && (
-              <span className="text-white/60">
-                Última actualización: {lastUpdate.toLocaleTimeString('es-ES')}
-                <span className="inline-block w-2 h-2 bg-green-400 rounded-full ml-2 animate-pulse"></span>
-              </span>
-            )}
-          </div>
         </div>
       </header>
 
